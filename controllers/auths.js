@@ -120,6 +120,10 @@ const loginUserController = async (req, res, next) => {
 
     if (!user) throw new customError('User not found', 404);
 
+    if (!user.isEmailVerified) throw new customError('Email account unverified. Cannot login', 434);
+
+    const passwordMatch = await bcrypt.compareSync(password, user.password);
+
     if (passwordMatch) {
       const token = jwt.sign(
         { user: { userId: user._id, username: user.username, email: user.email } },
