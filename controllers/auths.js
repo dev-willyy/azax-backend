@@ -1,0 +1,213 @@
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const User = require('../models/User.js');
+const customError = require('../utilities/customError.js');
+const emailService = require('../utilities/sendEmail.js');
+const handleCustomErrorResponse = require('../utilities/handleCustomErrorResponse.js');
+
+const generateOTP = () => Math.floor(1000 + Math.random() * 9000);
+
+const registerUserController = async (req, res, next) => {
+  const { username, email, password } = req.body;
+
+  try {
+    const existingUser = await User.findOne({ email });
+
+    if (existingUser) {
+      throw new customError('User already exists!', 403);
+    }
+
+    const salt = bcrypt.genSaltSync(10);
+    const hashedPassword = bcrypt.hashSync(password, salt);
+
+    const emailOtp = generateOTP().toString();
+
+    const user = new User({
+      username,
+      email,
+      password: hashedPassword,
+      emailOtp,
+    });
+
+    await emailService.sendVerificationEmail(email, `Your email verification OTP is ${emailOtp}`);
+
+    await user.save();
+
+    return res.status(201).json({
+      message: 'User created successfully',
+      otp: emailOtp,
+    });
+  } catch (error) {
+    handleCustomErrorResponse(res, error);
+  }
+};
+
+const resendEmailOtpController = async (req, res, next, isForgotPasswordOtp) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      throw new customError('User not found', 404);
+    }
+
+    if (!isForgotPasswordOtp && user.isEmailVerified) {
+      throw new customError('Email already verified', 400);
+    }
+
+    const newEmailOtp = generateOTP().toString();
+
+    user.emailOtp = newEmailOtp;
+
+    const prependedText = isForgotPasswordOtp ? 'forgot password' : 'email verification';
+
+    await emailService.sendVerificationEmail(email, `Your new ${prependedText} OTP is ${newEmailOtp}`);
+
+    await user.save();
+
+    return res.status(200).json({
+      message: 'Email OTP resent successfully',
+      otp: newEmailOtp,
+    });
+  } catch (error) {
+    handleCustomErrorResponse(res, error);
+  }
+};
+
+/**
+ *
+ * Ensure that favour does a countdown of 1:30 minutes after which he disables the button that types in OTP
+ * ::and shows an error of 'OTP Expired, Resend verification OTP'
+ *
+ */
+const verifyEmailOtpController = async (req, res, next) => {
+  const { email, emailOtp } = req.body;
+
+  try {
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      throw new customError('User not found', 404);
+    }
+
+    if (user.isEmailVerified) {
+      throw new customError('Email already verified', 400);
+    }
+
+    if (user.emailOtp !== emailOtp) {
+      throw new customError('Invalid OTP', 400);
+    }
+
+    user.isEmailVerified = true;
+    user.emailOtp = undefined;
+
+    await user.save();
+
+    return res.status(200).json({
+      message: 'Email verified successfully',
+    });
+  } catch (error) {
+    handleCustomErrorResponse(res, error);
+  }
+};
+
+const loginUserController = async (req, res, next) => {
+  const { email, password } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user) throw new customError('User not found', 404);
+
+    if (passwordMatch) {
+      const token = jwt.sign(
+        { user: { userId: user._id, username: user.username, email: user.email } },
+        process.env.SECRET_TOKEN,
+        {
+          expiresIn: '7d',
+        }
+      );
+
+      return res.status(200).json({
+        token,
+        message: 'Login successful',
+      });
+    } else {
+      throw new customError('Incorrect password', 401);
+    }
+  } catch (error) {
+    handleCustomErrorResponse(res, error);
+  }
+};
+
+const forgotPasswordController = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      throw new customError('User not found with this email', 404);
+    }
+
+    const forgotPasswordOtp = generateOTP().toString();
+    user.emailOtp = forgotPasswordOtp;
+
+    await user.save();
+
+    await emailService.sendVerificationEmail(email, `Your Password Reset OTP is: ${forgotPasswordOtp}`);
+
+    res.status(200).json({
+      message: 'Reset OTP sent to your email',
+      forgotPasswordOtp,
+    });
+  } catch (error) {
+    handleCustomErrorResponse(res, error);
+  }
+};
+
+const resendForgotPasswordOtpController = (req, res, next) => {
+  const isResendForgotPasswordOtp = true;
+
+  resendEmailOtpController(req, res, next, isResendForgotPasswordOtp);
+};
+
+const resetPasswordController = async (req, res) => {
+  const { email, newPassword, resetPasswordOtp } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      throw new ErrorCreator('User not found with this email', 404);
+    }
+
+    const isOTPMatch = user.emailOtp === resetPasswordOtp;
+
+    if (!isOTPMatch) throw new ErrorCreator('OTP is incorrect', 404);
+
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+
+    user.emailOtp = undefined;
+
+    await user.save();
+
+    res.status(200).json({
+      message: 'Password reset successful',
+    });
+  } catch (error) {
+    handleCustomErrorResponse(res, error);
+  }
+};
+
+module.exports = {
+  registerUserController,
+  resendEmailOtpController,
+  verifyEmailOtpController,
+  loginUserController,
+  forgotPasswordController,
+  resendForgotPasswordOtpController,
+  resetPasswordController,
+};
