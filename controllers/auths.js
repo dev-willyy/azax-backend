@@ -8,10 +8,10 @@ const handleCustomErrorResponse = require('../utilities/handleCustomErrorRespons
 
 const generateOTP = () => Math.floor(1000 + Math.random() * 9000);
 
+// The verification emails should be sent in a well strcutured html format
+
 const registerUserController = async (req, res, next) => {
   const { username, email, password } = req.body;
-
-  console.log({ username, email, password });
 
   try {
     const existingUser = await User.findOne({
@@ -28,7 +28,7 @@ const registerUserController = async (req, res, next) => {
     );
 
     if (!verificationResponse.data || verificationResponse.data.status !== 'valid') {
-      throw new customError('Invalid email address', 400);
+      throw new customError('Invalid email address', 200);
     }
 
     const salt = bcrypt.genSaltSync(10);
@@ -68,7 +68,7 @@ const sendEmailOtpController = async (req, res, next, isForgotPasswordOtp) => {
     }
 
     if (!isForgotPasswordOtp && user.isEmailVerified) {
-      throw new customError('Email already verified', 400);
+      throw new customError('Email already verified', 200);
     }
 
     const newEmailOtp = generateOTP().toString();
@@ -114,11 +114,11 @@ const verifyEmailOtpController = async (req, res, next) => {
     }
 
     if (user.isEmailVerified) {
-      throw new customError('Email already verified', 400);
+      throw new customError('Email already verified', 200);
     }
 
     if (user.emailOtp !== emailOtp) {
-      throw new customError('Invalid OTP', 400);
+      throw new customError('Invalid OTP', 200);
     }
 
     user.isEmailVerified = true;
