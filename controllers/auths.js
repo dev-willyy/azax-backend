@@ -8,7 +8,7 @@ const handleCustomErrorResponse = require('../utilities/handleCustomErrorRespons
 
 const generateOTP = () => Math.floor(1000 + Math.random() * 9000);
 
-// The verification emails should be sent in a well strcutured html format
+// The verification emails should be sent in a well structured html format
 
 const registerUserController = async (req, res, next) => {
   const { username, email, password } = req.body;
@@ -23,13 +23,13 @@ const registerUserController = async (req, res, next) => {
     }
 
     // Verify the email using ZeroBounce API
-    const verificationResponse = await axios.get(
-      `${process.env.ZEROBOUNCE_BASE_URL}?api_key=${process.env.ZEROBOUNCE_API_KEY}&email=${email}`
-    );
+    // const verificationResponse = await axios.get(
+    //   `${process.env.ZEROBOUNCE_BASE_URL}?api_key=${process.env.ZEROBOUNCE_API_KEY}&email=${email}`
+    // );
 
-    if (!verificationResponse.data || verificationResponse.data.status !== 'valid') {
-      throw new customError('Invalid email address', 200);
-    }
+    // if (!verificationResponse.data || verificationResponse.data.status !== 'valid') {
+    //   throw new customError('Invalid email address', 400);
+    // }
 
     const salt = bcrypt.genSaltSync(10);
     const hashedPassword = bcrypt.hashSync(password, salt);
@@ -68,7 +68,7 @@ const sendEmailOtpController = async (req, res, next, isForgotPasswordOtp) => {
     }
 
     if (!isForgotPasswordOtp && user.isEmailVerified) {
-      throw new customError('Email already verified', 200);
+      throw new customError('Email already verified', 400);
     }
 
     const newEmailOtp = generateOTP().toString();
@@ -114,11 +114,11 @@ const verifyEmailOtpController = async (req, res, next) => {
     }
 
     if (user.isEmailVerified) {
-      throw new customError('Email already verified', 200);
+      throw new customError('Email already verified', 400);
     }
 
     if (user.emailOtp !== emailOtp) {
-      throw new customError('Invalid OTP', 200);
+      throw new customError('Invalid OTP', 400);
     }
 
     user.isEmailVerified = true;
