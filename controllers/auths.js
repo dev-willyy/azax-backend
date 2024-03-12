@@ -60,8 +60,6 @@ const registerUserController = async (req, res, next) => {
 const sendEmailOtpController = async (req, res, next, isForgotPasswordOtp) => {
   const { email } = req.body;
 
-  console.log({ email });
-
   try {
     const user = await User.findOne({ email });
 
