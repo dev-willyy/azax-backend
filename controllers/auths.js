@@ -27,7 +27,7 @@ const registerUserController = async (req, res, next) => {
       `${process.env.ZEROBOUNCE_BASE_URL}?api_key=${process.env.ZEROBOUNCE_API_KEY}&email=${email}`
     );
 
-    if (!verificationResponse.data || verificationResponse.data.status !== 'Valid') {
+    if (!verificationResponse.data || verificationResponse.data.status !== 'valid') {
       throw new customError('Invalid email address', 400);
     }
 
