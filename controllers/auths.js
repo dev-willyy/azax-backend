@@ -57,8 +57,10 @@ const registerUserController = async (req, res, next) => {
   }
 };
 
-const resendEmailOtpController = async (req, res, next, isForgotPasswordOtp) => {
+const sendEmailOtpController = async (req, res, next, isForgotPasswordOtp) => {
   const { email } = req.body;
+
+  console.log({ email });
 
   try {
     const user = await User.findOne({ email });
@@ -89,6 +91,12 @@ const resendEmailOtpController = async (req, res, next, isForgotPasswordOtp) => 
   } catch (error) {
     handleCustomErrorResponse(res, error);
   }
+};
+
+const resendEmailOtpController = (req, res, next) => {
+  const isResendForgotPasswordOtp = false;
+
+  sendEmailOtpController(req, res, next, isResendForgotPasswordOtp);
 };
 
 /**
@@ -193,7 +201,7 @@ const forgotPasswordController = async (req, res) => {
 const resendForgotPasswordOtpController = (req, res, next) => {
   const isResendForgotPasswordOtp = true;
 
-  resendEmailOtpController(req, res, next, isResendForgotPasswordOtp);
+  sendEmailOtpController(req, res, next, isResendForgotPasswordOtp);
 };
 
 const resetPasswordController = async (req, res) => {
