@@ -23,5 +23,5 @@ dbConnection();
 app.use('/api/V1/auth', authRoutes);
 
 app.listen(PORT, () => {
-  console.log(`Coinwave server is running on http://localhost:${PORT}`);
+  console.log(`Azax server is running on http://localhost:${PORT}`);
 });

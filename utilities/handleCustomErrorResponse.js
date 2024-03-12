@@ -5,11 +5,13 @@ const handleCustomErrorResponse = (res, error) => {
 
   if (error instanceof CustomError) {
     res.status(error.statusCode).json({
-      error: error.message,
+      status: 'failure',
+      message: error.message,
     });
   } else {
     res.status(500).json({
-      error: 'Internal Server Error',
+      status: 'failure',
+      message: 'Internal Server Error',
     });
   }
 };

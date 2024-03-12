@@ -1,5 +1,6 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const axios = require('axios');
 const User = require('../models/User.js');
 const customError = require('../utilities/customError.js');
 const emailService = require('../utilities/sendEmail.js');
@@ -10,11 +11,24 @@ const generateOTP = () => Math.floor(1000 + Math.random() * 9000);
 const registerUserController = async (req, res, next) => {
   const { username, email, password } = req.body;
 
+  console.log({ username, email, password });
+
   try {
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({
+      $or: [{ email }, { username }],
+    });
 
     if (existingUser) {
       throw new customError('User already exists!', 403);
+    }
+
+    // Verify the email using ZeroBounce API
+    const verificationResponse = await axios.get(
+      `${process.env.ZEROBOUNCE_BASE_URL}?api_key=${process.env.ZEROBOUNCE_API_KEY}&email=${email}`
+    );
+
+    if (!verificationResponse.data || verificationResponse.data.status !== 'Valid') {
+      throw new customError('Invalid email address', 400);
     }
 
     const salt = bcrypt.genSaltSync(10);
@@ -34,6 +48,7 @@ const registerUserController = async (req, res, next) => {
     await user.save();
 
     return res.status(201).json({
+      status: 'success',
       message: 'User created successfully',
       otp: emailOtp,
     });
@@ -67,6 +82,7 @@ const resendEmailOtpController = async (req, res, next, isForgotPasswordOtp) => 
     await user.save();
 
     return res.status(200).json({
+      status: 'success',
       message: 'Email OTP resent successfully',
       otp: newEmailOtp,
     });
@@ -105,6 +121,7 @@ const verifyEmailOtpController = async (req, res, next) => {
     await user.save();
 
     return res.status(200).json({
+      status: 'success',
       message: 'Email verified successfully',
     });
   } catch (error) {
@@ -134,6 +151,7 @@ const loginUserController = async (req, res, next) => {
       );
 
       return res.status(200).json({
+        status: 'success',
         token,
         message: 'Login successful',
       });
@@ -163,6 +181,7 @@ const forgotPasswordController = async (req, res) => {
     await emailService.sendVerificationEmail(email, `Your Password Reset OTP is: ${forgotPasswordOtp}`);
 
     res.status(200).json({
+      status: 'success',
       message: 'Reset OTP sent to your email',
       forgotPasswordOtp,
     });
@@ -199,6 +218,7 @@ const resetPasswordController = async (req, res) => {
     await user.save();
 
     res.status(200).json({
+      status: 'success',
       message: 'Password reset successful',
     });
   } catch (error) {
