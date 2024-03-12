@@ -14,7 +14,7 @@ const registerUserController = async (req, res, next) => {
   const { username, email, password } = req.body;
 
   try {
-    const existingUser = await User.findOne({
+  const existingUser = await User.findOne({
       $or: [{ email }, { username }],
     });
 
@@ -28,7 +28,7 @@ const registerUserController = async (req, res, next) => {
     // );
 
     // if (!verificationResponse.data || verificationResponse.data.status !== 'valid') {
-    //   throw new customError('Invalid email address', 400);
+    //   throw new customError('Invalid email address', 200);
     // }
 
     const salt = bcrypt.genSaltSync(10);
@@ -68,7 +68,7 @@ const sendEmailOtpController = async (req, res, next, isForgotPasswordOtp) => {
     }
 
     if (!isForgotPasswordOtp && user.isEmailVerified) {
-      throw new customError('Email already verified', 400);
+      throw new customError('Email already verified', 200);
     }
 
     const newEmailOtp = generateOTP().toString();
@@ -114,11 +114,11 @@ const verifyEmailOtpController = async (req, res, next) => {
     }
 
     if (user.isEmailVerified) {
-      throw new customError('Email already verified', 400);
+      throw new customError('Email already verified', 200);
     }
 
     if (user.emailOtp !== emailOtp) {
-      throw new customError('Invalid OTP', 400);
+      throw new customError('Invalid OTP', 200);
     }
 
     user.isEmailVerified = true;
