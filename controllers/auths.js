@@ -8,28 +8,17 @@ const handleCustomErrorResponse = require('../utilities/handleCustomErrorRespons
 
 const generateOTP = () => Math.floor(1000 + Math.random() * 9000);
 
-// The verification emails should be sent in a well structured html format
-
 const registerUserController = async (req, res, next) => {
   const { username, email, password } = req.body;
 
   try {
-  const existingUser = await User.findOne({
+    const existingUser = await User.findOne({
       $or: [{ email }, { username }],
     });
 
     if (existingUser) {
-      throw new customError('User already exists!', 403);
+      throw new customError('User already exists!', 200);
     }
-
-    // Verify the email using ZeroBounce API
-    // const verificationResponse = await axios.get(
-    //   `${process.env.ZEROBOUNCE_BASE_URL}?api_key=${process.env.ZEROBOUNCE_API_KEY}&email=${email}`
-    // );
-
-    // if (!verificationResponse.data || verificationResponse.data.status !== 'valid') {
-    //   throw new customError('Invalid email address', 200);
-    // }
 
     const salt = bcrypt.genSaltSync(10);
     const hashedPassword = bcrypt.hashSync(password, salt);
@@ -64,7 +53,7 @@ const sendEmailOtpController = async (req, res, next, isForgotPasswordOtp) => {
     const user = await User.findOne({ email });
 
     if (!user) {
-      throw new customError('User not found', 404);
+      throw new customError('User not found', 200);
     }
 
     if (!isForgotPasswordOtp && user.isEmailVerified) {
@@ -110,7 +99,7 @@ const verifyEmailOtpController = async (req, res, next) => {
     let user = await User.findOne({ email });
 
     if (!user) {
-      throw new customError('User not found', 404);
+      throw new customError('User not found', 200);
     }
 
     if (user.isEmailVerified) {
@@ -141,7 +130,7 @@ const loginUserController = async (req, res, next) => {
   try {
     const user = await User.findOne({ email });
 
-    if (!user) throw new customError('User not found', 404);
+    if (!user) throw new customError('User not found', 200);
 
     if (!user.isEmailVerified) throw new customError('Email account unverified. Cannot login', 434);
 
@@ -176,7 +165,7 @@ const forgotPasswordController = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (!user) {
-      throw new customError('User not found with this email', 404);
+      throw new customError('User not found with this email', 200);
     }
 
     const forgotPasswordOtp = generateOTP().toString();
@@ -209,12 +198,12 @@ const resetPasswordController = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (!user) {
-      throw new ErrorCreator('User not found with this email', 404);
+      throw new ErrorCreator('User not found with this email', 200);
     }
 
     const isOTPMatch = user.emailOtp === resetPasswordOtp;
 
-    if (!isOTPMatch) throw new ErrorCreator('OTP is incorrect', 404);
+    if (!isOTPMatch) throw new ErrorCreator('OTP is incorrect', 200);
 
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(newPassword, salt);
