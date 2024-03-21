@@ -1,12 +1,21 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const axios = require('axios');
+// const EmailVerifier = require('email-verifier');
 const User = require('../models/User.js');
 const customError = require('../utilities/customError.js');
 const emailService = require('../utilities/sendEmail.js');
 const handleCustomErrorResponse = require('../utilities/handleCustomErrorResponse.js');
 
 const generateOTP = () => Math.floor(1000 + Math.random() * 9000);
+
+/** KEYNOTES:
+ *
+ * After April the version 2 will be completely deprecated
+ *
+ * The verification emails should be sent in a well structured html format
+ *
+ */
 
 const registerUserController = async (req, res, next) => {
   const { username, email, password } = req.body;
@@ -17,7 +26,7 @@ const registerUserController = async (req, res, next) => {
     });
 
     if (existingUser) {
-      throw new customError('User already exists!', 200);
+      throw new customError('User already exists!', 403);
     }
 
     const salt = bcrypt.genSaltSync(10);
@@ -53,7 +62,7 @@ const sendEmailOtpController = async (req, res, next, isForgotPasswordOtp) => {
     const user = await User.findOne({ email });
 
     if (!user) {
-      throw new customError('User not found', 200);
+      throw new customError('User not found', 404);
     }
 
     if (!isForgotPasswordOtp && user.isEmailVerified) {
@@ -99,7 +108,7 @@ const verifyEmailOtpController = async (req, res, next) => {
     let user = await User.findOne({ email });
 
     if (!user) {
-      throw new customError('User not found', 200);
+      throw new customError('User not found', 404);
     }
 
     if (user.isEmailVerified) {
@@ -130,7 +139,7 @@ const loginUserController = async (req, res, next) => {
   try {
     const user = await User.findOne({ email });
 
-    if (!user) throw new customError('User not found', 200);
+    if (!user) throw new customError('User not found', 404);
 
     if (!user.isEmailVerified) throw new customError('Email account unverified. Cannot login', 434);
 
@@ -165,7 +174,7 @@ const forgotPasswordController = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (!user) {
-      throw new customError('User not found with this email', 200);
+      throw new customError('User not found with this email', 404);
     }
 
     const forgotPasswordOtp = generateOTP().toString();
@@ -198,12 +207,12 @@ const resetPasswordController = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (!user) {
-      throw new ErrorCreator('User not found with this email', 200);
+      throw new ErrorCreator('User not found with this email', 404);
     }
 
     const isOTPMatch = user.emailOtp === resetPasswordOtp;
 
-    if (!isOTPMatch) throw new ErrorCreator('OTP is incorrect', 200);
+    if (!isOTPMatch) throw new ErrorCreator('OTP is incorrect', 400);
 
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(newPassword, salt);
