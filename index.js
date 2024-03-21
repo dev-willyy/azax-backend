@@ -4,7 +4,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const { config } = require('dotenv');
 const dbConnection = require('./database/dbConnection.js');
-const { authRoutes } = require('./routes');
+const { authRoutes, userRoutes } = require('./routes');
 const { randomBytes } = require('crypto');
 
 config();
@@ -21,6 +21,7 @@ app.use(morgan('combined'));
 dbConnection();
 
 app.use('/api/V1/auth', authRoutes);
+app.use('/api/V1/user', userRoutes);
 
 app.listen(PORT, () => {
   console.log(`Azax server is running on http://localhost:${PORT}`);

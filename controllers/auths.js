@@ -11,8 +11,7 @@ const generateOTP = () => Math.floor(1000 + Math.random() * 9000);
 
 /** KEYNOTES:
  *
- * After April the version 2 will be completely deprecated
- *
+ * The email address should be converted to lowercase by Favour before being POSTED
  * The verification emails should be sent in a well structured html format
  *
  */
@@ -146,13 +145,9 @@ const loginUserController = async (req, res, next) => {
     const passwordMatch = await bcrypt.compareSync(password, user.password);
 
     if (passwordMatch) {
-      const token = jwt.sign(
-        { user: { userId: user._id, username: user.username, email: user.email } },
-        process.env.SECRET_TOKEN,
-        {
-          expiresIn: '7d',
-        }
-      );
+      const token = jwt.sign({ user: { userId: user._id } }, process.env.SECRET_TOKEN, {
+        expiresIn: '7d',
+      });
 
       return res.status(200).json({
         status: 'success',

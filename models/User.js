@@ -9,11 +9,20 @@ const userSchema = new Schema(
       unique: true,
       trim: true,
     },
+    firstName: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    lastName: {
+      type: String,
+      required: true,
+      trim: true,
+    },
     email: {
       type: String,
       required: true,
       unique: true,
-      lowercase: true,
       trim: true,
     },
     password: {
@@ -26,6 +35,14 @@ const userSchema = new Schema(
     isEmailVerified: {
       type: Boolean,
       default: false,
+    },
+    imageUrl: {
+      type: String,
+      default: 'https://i.postimg.cc/hj3g9nRG/profile-avatar.png',
+    },
+    phoneNumber: {
+      type: String,
+      unique: true,
     },
   },
   {
