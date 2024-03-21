@@ -84,11 +84,11 @@ const updateUserInfo = async (req, res) => {
 
     if (!user) throw new customError('User not found', 404);
 
-    console.log({ user });
+    const { password, createdAt, updatedAt, __v, ...otherCredentials } = user._doc;
 
     res.status(200).json({
       status: 'success',
-      updatedUser: user,
+      updatedUser: otherCredentials,
     });
   } catch (error) {
     handleCustomErrorResponse(res, error);
@@ -125,8 +125,10 @@ const updateUserImage = async (req, res) => {
 
     if (!user) throw new customError('User not found', 404);
 
+    const { password, createdAt, updatedAt, __v, ...otherCredentials } = user._doc;
+
     res.status(200).json({
-      updatedUser: user,
+      updatedUser: otherCredentials,
       status: 'success',
       message: 'Image updated successfully!',
     });
