@@ -1,6 +1,6 @@
 /**
  *
- * Personal Information
+ * Personal Information ✅
  * Bank Details
  * Notification
  * Account Verification
@@ -31,9 +31,11 @@ const getUserInfo = async (req, res) => {
 
     if (!user) throw new customError('User not found', 404);
 
+    const { password, createdAt, updatedAt, __v, ...otherCredentials } = user._doc;
+
     return res.status(200).json({
       status: 'success',
-      user,
+      profile: otherCredentials,
     });
   } catch (error) {
     handleCustomErrorResponse(res, error);
