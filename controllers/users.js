@@ -15,7 +15,7 @@ const customError = require('../utilities/customError.js');
 const handleCustomErrorResponse = require('../utilities/handleCustomErrorResponse.js');
 
 const getUserInfo = async (req, res) => {
-  const { _id } = req.user;
+  const id = req.user.userId;
   const { userId } = req.params;
 
   try {
@@ -23,11 +23,11 @@ const getUserInfo = async (req, res) => {
       throw new customError('User Id is required', 405);
     }
 
-    if (userId !== _id.toString()) {
+    if (userId !== id) {
       throw new customError('User unauthorized to get resource', 401);
     }
 
-    const user = await User.findById(req.user._id);
+    const user = await User.findById(id);
 
     if (!user) throw new customError('User not found', 404);
 
@@ -40,39 +40,49 @@ const getUserInfo = async (req, res) => {
   }
 };
 
+/**
+ * The allowedUpdates array is subject to modification & should be exposed only to Admins
+ */
 const updateUserInfo = async (req, res) => {
-  const { _id } = req.user;
+  const id = req.user.userId;
   const { userId } = req.params;
 
   const { ...updateObj } = req.body;
   const updateKeysArr = Object.keys(req.body);
 
-  /**
-   * The allowedUpdates array is subject to modification & should be exposed only to Admins
-   */
   const allowedUpdates = ['username', 'firstName', 'lastName', 'email', 'phoneNumber'];
   const isValidOperation = updateKeysArr.every((update) => allowedUpdates.includes(update));
 
-  if (!isValidOperation) {
-    throw new customError('Invalid updates!', 400);
-  }
+  console.log({ id, userId, updateObj, updateKeysArr, allowedUpdates, isValidOperation });
 
   try {
+    if (!isValidOperation) {
+      throw new customError('Invalid updates!', 403);
+    }
+
     if (!userId) {
       throw new customError('User Id is required', 405);
     }
 
-    if (userId !== _id.toString()) {
+    if (userId !== id) {
       throw new customError('User unauthorized to update resource', 401);
     }
 
-    const user = await User.findById(req.user._id);
+    const filteredUpdateObj = {};
+    updateKeysArr.forEach((update) => {
+      if (updateObj[update] !== undefined) {
+        filteredUpdateObj[update] = updateObj[update];
+      }
+    });
+
+    const user = await User.findByIdAndUpdate(id, filteredUpdateObj, {
+      new: true,
+      runValidators: true,
+    });
 
     if (!user) throw new customError('User not found', 404);
 
-    updateKeysArr.forEach((update) => (user[update] = updateObj[update]));
-
-    await user.save();
+    console.log({ user });
 
     res.status(200).json({
       status: 'success',
@@ -84,28 +94,34 @@ const updateUserInfo = async (req, res) => {
 };
 
 const updateUserImage = async (req, res) => {
+  const id = req.user.userId;
   const { userId } = req.params;
-  const { _id } = req.user;
 
   const { imageUrl } = req.body;
-
-  console.log(userId, _id);
 
   try {
     if (!userId) {
       throw new customError('User Id is required', 405);
     }
 
-    if (userId !== _id.toString()) {
+    if (userId !== id) {
       throw new customError('User unauthorized to update resource', 401);
     }
 
-    const user = await User.findById(userId);
+    if (!imageUrl) {
+      throw new customError('Invalid request', 403);
+    }
+
+    const user = await User.findByIdAndUpdate(
+      id,
+      { imageUrl },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
 
     if (!user) throw new customError('User not found', 404);
-
-    user.imageUrl = imageUrl;
-    await user.save();
 
     res.status(200).json({
       updatedUser: user,
@@ -117,4 +133,8 @@ const updateUserImage = async (req, res) => {
   }
 };
 
-module.exports = { getUserInfo, updateUserInfo, updateUserImage };
+module.exports = {
+  getUserInfo,
+  updateUserInfo,
+  updateUserImage,
+};

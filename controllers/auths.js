@@ -144,8 +144,11 @@ const loginUserController = async (req, res, next) => {
 
     const passwordMatch = await bcrypt.compareSync(password, user.password);
 
+    console.log(user._id);
+    console.log(user._id.toString());
+
     if (passwordMatch) {
-      const token = jwt.sign({ user: { userId: user._id } }, process.env.SECRET_TOKEN, {
+      const token = jwt.sign({ user: { userId: user._id.toString() } }, process.env.SECRET_TOKEN, {
         expiresIn: '7d',
       });
 

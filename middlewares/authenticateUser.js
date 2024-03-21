@@ -6,19 +6,18 @@ const handleCustomErrorResponse = require('../utilities/handleCustomErrorRespons
 const authenticateUser = async (req, res, next) => {
   const token = req.headers.authorization;
 
-  if (!token) {
-    throw new customError('Authorization token is required', 499);
-  }
-
   try {
-    const decoded = jwt.verify(token, process.env.SECRET_TOKEN);
-    const user = await User.findById(decoded.user.userId);
-
-    if (!user) {
-      throw new customError('Unauthorized user', 401);
+    if (!token) {
+      throw new customError('Authorization token is required', 499);
     }
 
-    req.user = user;
+    const decoded = jwt.verify(token, process.env.SECRET_TOKEN);
+    if (!decoded) {
+      throw new createError('Unauthorized user', 401);
+    }
+
+    req.user = decoded.user;
+
     next();
   } catch (error) {
     handleCustomErrorResponse(res, error);
