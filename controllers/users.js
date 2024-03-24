@@ -41,14 +41,13 @@ const getUserInfo = async (req, res) => {
 
     let imageUrl = user.imageUrl;
 
-    // Check if the imageUrl is a default image URL
     const isDefaultImage = imageUrl === 'https://i.postimg.cc/hj3g9nRG/profile-avatar.png';
 
-    // If it's not a default image URL, include the image path
     let imageLink;
 
     if (!isDefaultImage) {
       const imageFile = fs.readFileSync(path.join(__dirname, '..', 'uploads', imageUrl));
+
       imageLink = `data:image/png;base64,${Buffer.from(imageFile).toString('base64')}`;
     }
 
@@ -174,7 +173,6 @@ const updateProfileImage = async (req, res) => {
         const { password, createdAt, updatedAt, __v, ...otherCredentials } = user._doc;
 
         res.status(200).json({
-          updatedUser: otherCredentials,
           status: 'success',
           message: 'Image updated successfully!',
         });
@@ -185,14 +183,11 @@ const updateProfileImage = async (req, res) => {
   }
 };
 
+// Handle Errors appropriately here
 const fetchProfileImage = (req, res) => {
   const { imageUrl } = req.params;
 
-  console.log({ imageUrl });
-
   const imagePath = path.join(__dirname, '..', 'uploads', imageUrl);
-
-  console.log(imagePath);
 
   // Serve the image file
   res.sendFile(imagePath);
