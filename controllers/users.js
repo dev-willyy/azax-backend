@@ -18,8 +18,7 @@ const customError = require('../utilities/customError.js');
 const handleCustomErrorResponse = require('../utilities/handleCustomErrorResponse.js');
 require('dotenv').config();
 
-const imageServerUrl =
-  process.env.IMG_SERVER_ENV === 'dev' ? process.env.DEV_SERVER_URL : process.env.PROD_SERVER_URL;
+const imageServerUrl = process.env.IMG_SERVER_ENV === 'dev' ? process.env.DEV_SERVER_URL : process.env.PROD_SERVER_URL;
 
 const getUserInfo = async (req, res) => {
   const id = req.user.userId;
@@ -57,8 +56,8 @@ const getUserInfo = async (req, res) => {
       status: 'success',
       profile: {
         ...otherCredentials,
-        imageUrl: `${imageServerUrl}/${imageUrl}`, // Include the image URL in the response
-        imagePath, // Include the image path in the response
+        imageUrl: isDefaultImage ? imageUrl : `${imageServerUrl}/${imageUrl}`,
+        imagePath,
       },
     });
   } catch (error) {
