@@ -143,6 +143,8 @@ const updateProfileImage = async (req, res) => {
 
       const { filepath: tempPath, originalFilename: imageName, size: imageSize } = image[0];
 
+      console.log(tempPath);
+
       // Limiting image size
       const maxSize = 500 * 1024; // 500KB
       if (imageSize > maxSize) {
