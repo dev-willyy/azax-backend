@@ -154,6 +154,8 @@ const updateProfileImage = async (req, res) => {
 
       const newPath = path.join(__dirname, '..', 'uploads', imageName);
 
+      console.log(newPath);
+
       // Move the uploaded image to a permanent location
       fs.rename(tempPath, newPath, async (err) => {
         if (err) {
