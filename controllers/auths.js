@@ -17,7 +17,7 @@ const generateOTP = () => Math.floor(1000 + Math.random() * 9000);
  */
 
 const registerUserController = async (req, res, next) => {
-  const { username, email, password } = req.body;
+  const { username, email, password, ...otherCredentials } = req.body;
 
   try {
     const existingUser = await User.findOne({
@@ -34,6 +34,8 @@ const registerUserController = async (req, res, next) => {
     const emailOtp = generateOTP().toString();
 
     const user = new User({
+      firstName: otherCredentials.firstName,
+      lastName: otherCredentials.lastName,
       username,
       email,
       password: hashedPassword,
