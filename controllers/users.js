@@ -16,6 +16,10 @@ const formidable = require('formidable');
 const User = require('../models/User.js');
 const customError = require('../utilities/customError.js');
 const handleCustomErrorResponse = require('../utilities/handleCustomErrorResponse.js');
+require('dotenv').config();
+
+const imageServerUrl =
+  process.env.IMG_SERVER_ENV === 'dev' ? process.env.DEV_SERVER_URL : process.env.PROD_SERVER_URL;
 
 const getUserInfo = async (req, res) => {
   const id = req.user.userId;
@@ -53,7 +57,7 @@ const getUserInfo = async (req, res) => {
       status: 'success',
       profile: {
         ...otherCredentials,
-        imageUrl, // Include the image URL in the response
+        imageUrl: `${imageServerUrl}/${imageUrl}`, // Include the image URL in the response
         imagePath, // Include the image path in the response
       },
     });
@@ -142,11 +146,11 @@ const updateProfileImage = async (req, res) => {
       const { filepath: tempPath, originalFilename: imageName, size: imageSize } = image[0];
 
       // Limiting image size
-      const maxSize = 250 * 1024; // 250KB
+      const maxSize = 500 * 1024; // 500KB
       if (imageSize > maxSize) {
         return res.status(400).json({
           status: 'failure',
-          message: 'Image file cannot be more than 250KB',
+          message: 'Image file cannot be more than 500KB',
         });
       }
 
