@@ -45,19 +45,19 @@ const getUserInfo = async (req, res) => {
     const isDefaultImage = imageUrl === 'https://i.postimg.cc/hj3g9nRG/profile-avatar.png';
 
     // If it's not a default image URL, include the image path
-    let imagePath = null;
-    if (!isDefaultImage) {
-      imagePath = path.join(__dirname, '..', 'uploads', imageUrl);
-    }
+    let imageLink;
 
-    console.log({ imagePath, imageUrl });
+    if (!isDefaultImage) {
+      const imageFile = fs.readFileSync(path.join(__dirname, '..', 'uploads', imageUrl));
+      imageLink = `data:image/png;base64,${Buffer.from(imageFile).toString('base64')}`;
+    }
 
     return res.status(200).json({
       status: 'success',
       profile: {
         ...otherCredentials,
         imageUrl: isDefaultImage ? imageUrl : `${imageServerUrl}/${imageUrl}`,
-        imagePath,
+        imageLink,
       },
     });
   } catch (error) {
