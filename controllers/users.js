@@ -1,7 +1,7 @@
 /**
  *
  * Personal Information ✅
- * Bank Details
+ * Bank Details ✅
  * Notification
  * Account Verification
  * Settings

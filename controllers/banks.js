@@ -29,10 +29,24 @@ const getSupportedBanks = async (req, res) => {
 };
 
 const getBankDetails = async (req, res) => {
+  const id = req.user.userId;
+  const { userId } = req.params;
+
   try {
-    const user = await User.findById(req.user._id);
+    if (!userId) {
+      throw new customError('User Id is required', 405);
+    }
+
+    if (userId !== id) {
+      throw new customError('User unauthorized to get resource', 401);
+    }
+
+    const user = await User.findById(id);
+
+    if (!user) throw new customError('User not found', 404);
 
     res.status(200).json({
+      status: 'success',
       bankName: user.bankName,
       bankAccountNumber: user.bankAccountNumber,
     });
@@ -43,16 +57,29 @@ const getBankDetails = async (req, res) => {
 
 // Updating bank info should be a one-time-update
 const updateBankDetails = async (req, res) => {
+  const id = req.user.userId;
+  const { userId } = req.params;
+
   const updates = Object.keys(req.body);
   const allowedUpdates = ['bankName', 'bankAccountNumber'];
   const isValidOperation = updates.every((update) => allowedUpdates.includes(update));
 
   try {
+    if (!userId) {
+      throw new customError('User Id is required', 405);
+    }
+
+    if (userId !== id) {
+      throw new customError('User unauthorized to get resource', 401);
+    }
+
     if (!isValidOperation) {
       throw new customError('Invalid updates!', 400);
     }
 
-    const user = req.user;
+    const user = await User.findById(id);
+
+    if (!user) throw new customError('User not found', 404);
 
     console.log(user);
 
@@ -61,8 +88,8 @@ const updateBankDetails = async (req, res) => {
     await user.save();
 
     res.status(200).json({
-      bankName: user.bankName,
-      bankAccountNumber: user.bankAccountNumber,
+      status: 'success',
+      message: 'Bank details updated successfully',
     });
   } catch (error) {
     handleCustomErrorResponse(res, error);
@@ -104,8 +131,10 @@ const verifyBankAccount = async (req, res) => {
         message: 'Failed to verify bank account',
         data,
       });
+      // throw new customError('Failed to verify bank account', 400);
     }
   } catch (error) {
+    console.error('error:', error);
     handleCustomErrorResponse(res, error);
   }
 };
