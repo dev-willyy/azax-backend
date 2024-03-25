@@ -132,6 +132,7 @@ const updateProfileImage = async (req, res) => {
 
     form.parse(req, async (err, fields, files) => {
       if (err) {
+        console.error(err.message);
         throw new customError('Error parsing form data', 500);
       }
 
