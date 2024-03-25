@@ -22,6 +22,7 @@ const getSupportedBanks = async (req, res) => {
 
     // Send the list of supportedBanks to the client
     res.status(200).json({
+      status: 'success',
       supportedBanks,
     });
   } catch (error) {
@@ -42,6 +43,7 @@ const getBankDetails = async (req, res) => {
   }
 };
 
+// Updating bank info should be a one-time-update
 const updateBankDetails = async (req, res) => {
   const updates = Object.keys(req.body);
   const allowedUpdates = ['bankName', 'bankAccountNumber'];
