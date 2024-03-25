@@ -39,6 +39,14 @@ const userSchema = new Schema(
       type: String,
       unique: true,
     },
+    bankName: {
+      type: String,
+      trim: true,
+    },
+    bankAccountNumber: {
+      type: String,
+      trim: true,
+    },
   },
   {
     timestamps: true,

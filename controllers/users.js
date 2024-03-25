@@ -181,7 +181,10 @@ const updateProfileImage = async (req, res) => {
           const user = await User.findByIdAndUpdate(id, { imageUrl }, { new: true, runValidators: true });
 
           if (!user) {
-            throw new customError('User not found', 404);
+            return res.status(404).json({
+              status: 'failure',
+              message: 'User not found',
+            });
           }
 
           const { password, createdAt, updatedAt, __v, ...otherCredentials } = user._doc;
