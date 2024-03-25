@@ -16,11 +16,9 @@ const getSupportedBanks = async (req, res) => {
         slug,
       }));
 
-      // Save supportedBanks to the database
       await Bank.insertMany(supportedBanks);
     }
 
-    // Send the list of supportedBanks to the client
     res.status(200).json({
       status: 'success',
       supportedBanks,
@@ -75,13 +73,17 @@ const verifyBankAccount = async (req, res) => {
   const { bankName, bankAccountNumber } = req.body;
 
   try {
+    const bank = await Bank.findOne({
+      name: bankName,
+    });
+
+    if (!bank) {
+      throw new customError('Bank not found', 400);
+    }
+
     // Make a request to Paystack API to verify bank account
-    const response = await axios.post(
-      'https://api.paystack.co/bank/resolve',
-      {
-        account_number: bankAccountNumber,
-        bank_code: bankName, // You may need to map bank names to their respective codes
-      },
+    const response = await axios.get(
+      `https://api.paystack.co/bank/resolve?account_number=${bankAccountNumber}&bank_code=${bank.code}`,
       {
         headers: {
           Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
@@ -92,20 +94,18 @@ const verifyBankAccount = async (req, res) => {
     const data = response.data;
 
     if (data.status === true) {
-      // Bank account is verified
       res.status(200).json({
+        status: 'success',
         message: 'Bank account verified successfully',
-        data,
+        data: data.data,
       });
     } else {
-      // Bank account verification failed
       res.status(400).json({
         message: 'Failed to verify bank account',
         data,
       });
     }
   } catch (error) {
-    // Handle error
     handleCustomErrorResponse(res, error);
   }
 };
