@@ -2,6 +2,8 @@ const axios = require('axios');
 const User = require('../models/User.js');
 const Bank = require('../models/Bank.js');
 const handleCustomErrorResponse = require('../utilities/handleCustomErrorResponse.js');
+const customError = require('../utilities/customError.js');
+const checkIsNameMatches = require('../utilities/checkIsNameMatches.js');
 
 const getSupportedBanks = async (req, res) => {
   try {
@@ -81,8 +83,6 @@ const updateBankDetails = async (req, res) => {
 
     if (!user) throw new customError('User not found', 404);
 
-    console.log(user);
-
     updates.forEach((update) => (user[update] = req.body[update]));
 
     await user.save();
@@ -97,9 +97,14 @@ const updateBankDetails = async (req, res) => {
 };
 
 const verifyBankAccount = async (req, res) => {
+  const id = req.user.userId;
   const { bankName, bankAccountNumber } = req.body;
 
   try {
+    const user = await User.findById(id);
+
+    if (!user) throw new customError('User not obtainable for verification', 404);
+
     const bank = await Bank.findOne({
       name: bankName,
     });
@@ -108,7 +113,6 @@ const verifyBankAccount = async (req, res) => {
       throw new customError('Bank not found', 400);
     }
 
-    // Make a request to Paystack API to verify bank account
     const response = await axios.get(
       `https://api.paystack.co/bank/resolve?account_number=${bankAccountNumber}&bank_code=${bank.code}`,
       {
@@ -118,25 +122,41 @@ const verifyBankAccount = async (req, res) => {
       }
     );
 
-    const data = response.data;
+    const { data } = response;
+
+    const userFullName = `${user.firstName} ${user.lastName}`;
 
     if (data.status === true) {
-      res.status(200).json({
-        status: 'success',
-        message: 'Bank account verified successfully',
-        data: data.data,
-      });
-    } else {
-      res.status(400).json({
-        message: 'Failed to verify bank account',
-        data,
-      });
-      // throw new customError('Failed to verify bank account', 400);
+      const accountHolderName = data.data.account_name;
+
+      if (checkIsNameMatches(userFullName, accountHolderName)) {
+        return res.status(200).json({
+          status: 'success',
+          message: 'Bank account verified successfully',
+          data: data.data,
+        });
+      } else {
+        return res.status(400).json({
+          status: 'failure',
+          message: 'Bank account name does not match user full name',
+        });
+      }
     }
   } catch (error) {
-    console.error('error:', error);
+    if (error.response?.data.type === 'validation_error' || error.response?.data.status === false) {
+      return res.status(error.response.status).json({
+        status: 'failure',
+        message: 'Bank account verification failed. Account name cannot be resolved',
+      });
+    }
+
     handleCustomErrorResponse(res, error);
   }
 };
 
-module.exports = { getSupportedBanks, getBankDetails, updateBankDetails, verifyBankAccount };
+module.exports = {
+  getSupportedBanks,
+  getBankDetails,
+  updateBankDetails,
+  verifyBankAccount,
+};
