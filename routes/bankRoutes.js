@@ -4,7 +4,7 @@ const { authenticateUser } = require('../middlewares/authenticateUser.js');
 
 const router = new express.Router();
 
-router.get('/supportedBanks', getSupportedBanks);
+router.get('/supported', getSupportedBanks);
 router.get('/updateDetails', authenticateUser, getBankDetails);
 router.put('/', authenticateUser, updateBankDetails);
 router.put('/', authenticateUser, verifyBankAccount);
