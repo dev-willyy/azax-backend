@@ -98,7 +98,7 @@ const updateUserInfo = async (req, res) => {
 
     const { password, createdAt, updatedAt, __v, ...otherCredentials } = user._doc;
 
-    res.status(200).json({
+    return res.status(200).json({
       status: 'success',
       updatedUser: otherCredentials,
     });
@@ -168,7 +168,7 @@ const updateProfileImage = async (req, res) => {
             });
           }
 
-          res.status(200).json({
+          return res.status(200).json({
             status: 'success',
             message: 'Image updated successfully!',
           });
