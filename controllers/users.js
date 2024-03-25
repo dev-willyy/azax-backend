@@ -132,7 +132,6 @@ const updateProfileImage = async (req, res) => {
 
     form.parse(req, async (err, fields, files) => {
       if (err) {
-        console.error(err.message);
         throw new customError('Error parsing form data', 500);
       }
 
@@ -162,6 +161,8 @@ const updateProfileImage = async (req, res) => {
       // Move the uploaded image to a permanent location
       fs.rename(tempPath, newPath, async (err) => {
         if (err) {
+          console.error(err.message);
+
           return res.status(500).json({
             message: 'Error saving image',
           });
