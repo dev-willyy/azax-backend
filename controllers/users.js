@@ -159,28 +159,37 @@ const updateProfileImage = async (req, res) => {
       console.log(newPath);
 
       // Move the uploaded image to a permanent location
-      fs.rename(tempPath, newPath, async (err) => {
+      fs.copyFile(tempPath, newPath, async (err) => {
         if (err) {
           console.error(err.message);
-
           return res.status(500).json({
-            message: 'Error saving image',
+            message: `Error saving image: ${err.message}`,
           });
         }
 
-        // Update user's image URL in the database
-        const imageUrl = `${imageName}`;
-        const user = await User.findByIdAndUpdate(id, { imageUrl }, { new: true, runValidators: true });
+        // Delete the temporary file
+        fs.unlink(tempPath, async (err) => {
+          if (err) {
+            console.error(err.message);
+            return res.status(500).json({
+              message: `Error saving image ${err.message}`,
+            });
+          }
 
-        if (!user) {
-          throw new customError('User not found', 404);
-        }
+          // Update user's image URL in the database
+          const imageUrl = `${imageName}`;
+          const user = await User.findByIdAndUpdate(id, { imageUrl }, { new: true, runValidators: true });
 
-        const { password, createdAt, updatedAt, __v, ...otherCredentials } = user._doc;
+          if (!user) {
+            throw new customError('User not found', 404);
+          }
 
-        res.status(200).json({
-          status: 'success',
-          message: 'Image updated successfully!',
+          const { password, createdAt, updatedAt, __v, ...otherCredentials } = user._doc;
+
+          res.status(200).json({
+            status: 'success',
+            message: 'Image updated successfully!',
+          });
         });
       });
     });
