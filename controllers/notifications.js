@@ -5,7 +5,6 @@ const handleCustomErrorResponse = require('../utilities/handleCustomErrorRespons
 const updateNotificationStatus = async (req, res, next) => {
   const id = req.user.userId;
   const { userId } = req.params;
-
   const { notificationStatus } = req.body;
 
   try {
@@ -17,7 +16,7 @@ const updateNotificationStatus = async (req, res, next) => {
       throw new customError('User unauthorized to update resource', 401);
     }
 
-    if (!notificationStatus) {
+    if (notificationStatus ?? null === null) {
       throw new customError('Notification status is required', 405);
     }
 
