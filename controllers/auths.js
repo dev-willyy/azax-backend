@@ -113,11 +113,11 @@ const verifyEmailOtpController = async (req, res, next) => {
     }
 
     if (user.isEmailVerified) {
-      throw new customError('Email already verified', 200);
+      throw new customError('Email already verified', 409);
     }
 
     if (user.emailOtp !== emailOtp) {
-      throw new customError('Invalid OTP', 200);
+      throw new customError('Invalid OTP', 403);
     }
 
     user.isEmailVerified = true;

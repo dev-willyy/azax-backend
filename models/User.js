@@ -39,6 +39,7 @@ const userSchema = new Schema(
       type: String,
       unique: true,
     },
+    // update the bankName & bankAccountNumber as fields under bankDetails (Do the same for settings & its fields)
     bankName: {
       type: String,
       trim: true,
