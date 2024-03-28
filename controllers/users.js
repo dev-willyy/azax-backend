@@ -47,7 +47,7 @@ const getUserInfo = async (req, res) => {
       profile: {
         ...profileKeyValuePairs,
         imageUrl: isDefaultImage ? imageUrl : `${imageServerUrl}/${imageUrl}`,
-        imageLink,
+        // imageLink,
       },
     });
   } catch (error) {

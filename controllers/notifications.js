@@ -16,8 +16,8 @@ const updateNotificationStatus = async (req, res, next) => {
       throw new customError('User unauthorized to update resource', 401);
     }
 
-    if (notificationStatus ?? null === null) {
-      throw new customError('Notification status is required', 405);
+    if (typeof notificationStatus !== 'boolean') {
+      throw new customError('Notification status must be a boolean value', 405);
     }
 
     const user = await User.findByIdAndUpdate(id, { notificationStatus }, { new: true });
