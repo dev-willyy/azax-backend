@@ -4,9 +4,12 @@ const customError = require('../utilities/customError.js');
 const handleCustomErrorResponse = require('../utilities/handleCustomErrorResponse.js');
 
 const authenticateUser = async (req, res, next) => {
-  const token = req.headers.authorization;
+  const { authorization } = req.headers;
 
   try {
+    if (!authorization) throw new createError('Authorization headers not found', 404);
+
+    const token = authorization.split(' ')[1];
     if (!token) {
       throw new customError('Authorization token is required', 499);
     }

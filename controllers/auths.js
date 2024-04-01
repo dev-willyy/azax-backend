@@ -137,6 +137,8 @@ const verifyEmailOtpController = async (req, res, next) => {
 const loginUserController = async (req, res, next) => {
   const { email, password } = req.body;
 
+  console.log({ email, password });
+
   try {
     const user = await User.findOne({ email });
 
@@ -146,13 +148,18 @@ const loginUserController = async (req, res, next) => {
 
     const passwordMatch = await bcrypt.compareSync(password, user.password);
 
-    console.log(user._id);
-    console.log(user._id.toString());
-
     if (passwordMatch) {
-      const token = jwt.sign({ user: { userId: user._id.toString() } }, process.env.SECRET_TOKEN, {
-        expiresIn: '7d',
-      });
+      const token = jwt.sign(
+        {
+          user: {
+            userId: user._id.toString(),
+          },
+        },
+        process.env.SECRET_TOKEN,
+        {
+          expiresIn: '7d',
+        }
+      );
 
       return res.status(200).json({
         status: 'success',

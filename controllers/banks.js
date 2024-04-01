@@ -7,23 +7,32 @@ const checkIsNameMatches = require('../utilities/checkIsNameMatches.js');
 
 const getSupportedBanks = async (req, res) => {
   try {
-    let supportedBanks = await Bank.find();
+    const response = await axios.get('https://api.paystack.co/bank');
 
-    if (!supportedBanks.length) {
-      const response = await axios.get('https://api.paystack.co/bank');
+    const { status, statusText, data } = response;
 
-      supportedBanks = response.data.data.map(({ name, code, slug }) => ({
-        name,
-        code,
-        slug,
-      }));
-
-      await Bank.insertMany(supportedBanks);
+    if (status !== 200) {
+      throw new customError('An error occurred while fetching banks.', 500);
     }
 
-    res.status(200).json({
+    const { message, data: bankData } = data;
+
+    let banksArr = [];
+
+    bankData.map((bank) => {
+      return banksArr.push({
+        id: bank.id,
+        name: bank.name,
+        code: bank.code,
+        slug: bank.slug,
+      });
+    });
+
+    return res.status(status).json({
       status: 'success',
-      supportedBanks,
+      statusText,
+      message,
+      supportedBanks: banksArr,
     });
   } catch (error) {
     handleCustomErrorResponse(res, error);
@@ -87,7 +96,7 @@ const updateBankDetails = async (req, res) => {
 
     await user.save();
 
-    res.status(200).json({
+    return res.status(200).json({
       status: 'success',
       message: 'Bank details updated successfully',
     });

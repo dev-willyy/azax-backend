@@ -52,6 +52,10 @@ const userSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    isAccountVerified: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
