@@ -1,5 +1,6 @@
 const CustomError = require('./customError.js');
 const { AxiosError } = require('axios');
+const { Error: MongooseError } = require('mongoose');
 
 const handleCustomErrorResponse = (res, error) => {
   console.error(error);
@@ -16,13 +17,15 @@ const handleCustomErrorResponse = (res, error) => {
     });
   } else if (error instanceof AxiosError) {
     const { response, code } = error;
+    const { data } = response;
 
     if (response && response.status) {
       res.status(response.status).json({
-        status: 'failure',
+        status: data?.status || 'failure',
         code,
-        type: 'Axios error response',
-        message: response.statusText || 'Unknown Axios error occurred',
+        type: data?.type || 'Axios error response',
+        message: data?.message,
+        error: response.statusText || 'Unknown Axios error occurred',
       });
     } else {
       res.status(500).json({
@@ -30,6 +33,26 @@ const handleCustomErrorResponse = (res, error) => {
         message: 'Internal Server Error',
       });
     }
+  } else if (error instanceof MongooseError) {
+    const { errors, message, _message } = error;
+
+    let reason;
+
+    if (errors && errors['settings.optInForSMSNotification']) {
+      const { reason: optInReason } = errors['settings.optInForSMSNotification'];
+      reason = optInReason;
+    } else {
+      reason;
+    }
+
+    res.status(400).json({
+      status: 'failure',
+      type: reason?.name,
+      message: _message,
+      errorValue: reason?.value,
+      error: reason?.message,
+      errorMessage: message,
+    });
   } else {
     res.status(500).json({
       status: 'failure',

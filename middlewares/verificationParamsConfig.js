@@ -2,6 +2,9 @@ const User = require('../models/User.js');
 const customError = require('../utilities/customError.js');
 const handleCustomErrorResponse = require('../utilities/handleCustomErrorResponse.js');
 
+/*
+ * Identification type has to be BVN OR NIN
+ */
 const verificationParamsConfig = async (req, res, next) => {
   const id = req.user.userId;
   const { userId } = req.params;
@@ -9,21 +12,21 @@ const verificationParamsConfig = async (req, res, next) => {
   const {
     country,
     countryAlias,
-    type,
-    account_number,
+    accountNumber,
     bvn,
-    bank_code,
-    first_name,
-    last_name,
+    bankCode,
+    email,
+    firstName,
+    lastName,
+    phoneNumber,
+    dateOfBirth,
     identityDocumentNumber,
-    selfiePhoto,
   } = req.body;
 
   try {
     if (!userId) {
       throw new customError('User Id is required', 405);
     }
-
     if (userId !== id) {
       throw new customError('User unauthorized to get resource', 401);
     }
@@ -33,16 +36,30 @@ const verificationParamsConfig = async (req, res, next) => {
       throw new customError('User not found and cannot continue verification', 404);
     }
 
-    // Customer details to be sent in the request
-    const params = {
-      country: 'NG',
+    const customerVerificationParams = {
+      country: countryAlias,
       type: 'bank_account',
-      account_number: '0123456789',
-      bvn: '200123456677',
-      bank_code: '007',
-      first_name: 'Asta',
-      last_name: 'Lavista',
+      account_number: accountNumber,
+      bvn,
+      bank_code: bankCode,
+      first_name: firstName,
+      last_name: lastName,
     };
+
+    customerCreationParams = {
+      email,
+      first_name: firstName,
+      last_name: lastName,
+      phone: phoneNumber,
+    };
+
+    const otherParams = {
+      countryAlias,
+      dateOfBirth,
+      identityDocumentNumber,
+    };
+
+    req.objs = { customerVerificationParams, customerCreationParams, otherParams, user };
 
     next();
   } catch (error) {

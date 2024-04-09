@@ -1,12 +1,17 @@
 const express = require('express');
-const { getSupportedBanks, getBankDetails, updateBankDetails, verifyBankAccount } = require('../controllers/banks.js');
+const {
+  getSupportedBanksController,
+  getBankDetailsController,
+  updateBankDetailsController,
+  verifyBankAccountController,
+} = require('../controllers/banks.js');
 const { authenticateUser } = require('../middlewares/authenticateUser.js');
 
 const router = new express.Router();
 
-router.get('/supported', getSupportedBanks);
-router.get('/:userId', authenticateUser, getBankDetails);
-router.put('/updateDetails/:userId', authenticateUser, updateBankDetails);
-router.post('/verifyDetails', authenticateUser, verifyBankAccount);
+router.get('/supported', getSupportedBanksController);
+router.get('/:userId', authenticateUser, getBankDetailsController);
+router.put('/updateDetails/:userId', authenticateUser, updateBankDetailsController);
+router.post('/verifyDetails', authenticateUser, verifyBankAccountController);
 
 module.exports = { bankRoutes: router };

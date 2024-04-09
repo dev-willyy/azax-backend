@@ -1,11 +1,14 @@
 const express = require('express');
 const { authenticateUser } = require('../middlewares/authenticateUser.js');
 const verificationParamsConfig = require('../middlewares/verificationParamsConfig.js');
-const { fetchAllSupportedCountries, verifyCustomerDetails } = require('../controllers/customerVerification.js');
+const {
+  fetchAllSupportedCountriesController,
+  verifyCustomerDetailsController,
+} = require('../controllers/customerVerification.js');
 
 const router = new express.Router();
 
-router.get('/getSupportedCountries', fetchAllSupportedCountries);
-router.get('/verify/:userId', authenticateUser, verificationParamsConfig, verifyCustomerDetails);
+router.get('/getSupportedCountries', fetchAllSupportedCountriesController);
+router.post('/verify/:userId', authenticateUser, verificationParamsConfig, verifyCustomerDetailsController);
 
 module.exports = { customerVerificationRoutes: router };

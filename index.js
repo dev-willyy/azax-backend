@@ -4,7 +4,15 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const { config } = require('dotenv');
 const dbConnection = require('./database/dbConnection.js');
-const { authRoutes, userRoutes, bankRoutes, notificationRoutes, customerVerificationRoutes } = require('./routes');
+const {
+  authRoutes,
+  userRoutes,
+  bankRoutes,
+  notificationRoutes,
+  customerVerificationRoutes,
+  settingsRoutes,
+  securityRoutes,
+} = require('./routes');
 const { randomBytes } = require('crypto');
 
 config();
@@ -25,6 +33,8 @@ app.use('/api/V1/user', userRoutes);
 app.use('/api/V1/bank', bankRoutes);
 app.use('/api/V1/notification', notificationRoutes);
 app.use('/api/V1/customerVerification', customerVerificationRoutes);
+app.use('/api/V1/settings', settingsRoutes);
+app.use('/api/V1/security', securityRoutes);
 
 app.listen(PORT, () => {
   console.log(`Azax server is running on http://localhost:${PORT}`);

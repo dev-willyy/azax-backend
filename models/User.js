@@ -39,14 +39,15 @@ const userSchema = new Schema(
       type: String,
       unique: true,
     },
-    // update the bankName & bankAccountNumber as fields under bankDetails (Do the same for settings & its fields)
-    bankName: {
-      type: String,
-      trim: true,
-    },
-    bankAccountNumber: {
-      type: String,
-      trim: true,
+    bankDetails: {
+      bankName: {
+        type: String,
+        trim: true,
+      },
+      bankAccountNumber: {
+        type: String,
+        trim: true,
+      },
     },
     notificationStatus: {
       type: Boolean,
@@ -55,6 +56,26 @@ const userSchema = new Schema(
     isAccountVerified: {
       type: Boolean,
       default: false,
+    },
+    security: {
+      isTwoFactorAuthActive: {
+        type: Boolean,
+        default: false,
+      },
+    },
+    settings: {
+      receiveWeeklyNewsletter: {
+        type: Boolean,
+        default: false,
+      },
+      optInForSMSNotification: {
+        type: Boolean,
+        default: false,
+      },
+      language: {
+        type: String,
+        default: 'English',
+      },
     },
   },
   {

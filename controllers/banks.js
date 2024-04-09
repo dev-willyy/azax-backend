@@ -5,30 +5,36 @@ const handleCustomErrorResponse = require('../utilities/handleCustomErrorRespons
 const customError = require('../utilities/customError.js');
 const checkIsNameMatches = require('../utilities/checkIsNameMatches.js');
 
-const getSupportedBanks = async (req, res) => {
+const fetchBanks = async () => {
   try {
-    const response = await axios.get('https://api.paystack.co/bank');
+    const banksResponse = await axios.get('https://api.paystack.co/bank');
 
-    const { status, statusText, data } = response;
+    const { status, statusText, data: banks } = banksResponse;
 
     if (status !== 200) {
       throw new customError('An error occurred while fetching banks.', 500);
     }
 
-    const { message, data: bankData } = data;
+    const { message, data: bankData } = banks;
 
-    let banksArr = [];
+    return { statusText, message, bankData };
+  } catch (error) {
+    handleCustomErrorResponse(res, error);
+  }
+};
 
-    bankData.map((bank) => {
-      return banksArr.push({
-        id: bank.id,
-        name: bank.name,
-        code: bank.code,
-        slug: bank.slug,
-      });
-    });
+const getSupportedBanksController = async (req, res) => {
+  try {
+    const { statusText, message, bankData } = await fetchBanks();
 
-    return res.status(status).json({
+    const banksArr = bankData.map((bank) => ({
+      id: bank.id,
+      name: bank.name,
+      code: bank.code,
+      slug: bank.slug,
+    }));
+
+    return res.status(200).json({
       status: 'success',
       statusText,
       message,
@@ -39,7 +45,7 @@ const getSupportedBanks = async (req, res) => {
   }
 };
 
-const getBankDetails = async (req, res) => {
+const getBankDetailsController = async (req, res) => {
   const id = req.user.userId;
   const { userId } = req.params;
 
@@ -56,10 +62,12 @@ const getBankDetails = async (req, res) => {
 
     if (!user) throw new customError('User not found', 404);
 
+    const { bankName, bankAccountNumber } = user._doc.bankDetails;
+
     res.status(200).json({
       status: 'success',
-      bankName: user.bankName,
-      bankAccountNumber: user.bankAccountNumber,
+      bankName: bankName,
+      bankAccountNumber: bankAccountNumber,
     });
   } catch (error) {
     handleCustomErrorResponse(res, error);
@@ -67,12 +75,13 @@ const getBankDetails = async (req, res) => {
 };
 
 // Updating bank info should be a one-time-update
-const updateBankDetails = async (req, res) => {
+const updateBankDetailsController = async (req, res) => {
   const id = req.user.userId;
   const { userId } = req.params;
 
   const updates = Object.keys(req.body);
   const allowedUpdates = ['bankName', 'bankAccountNumber'];
+
   const isValidOperation = updates.every((update) => allowedUpdates.includes(update));
 
   try {
@@ -92,7 +101,7 @@ const updateBankDetails = async (req, res) => {
 
     if (!user) throw new customError('User not found', 404);
 
-    updates.forEach((update) => (user[update] = req.body[update]));
+    updates.forEach((update) => (user.bankDetails[update] = req.body[update]));
 
     await user.save();
 
@@ -105,19 +114,19 @@ const updateBankDetails = async (req, res) => {
   }
 };
 
-const verifyBankAccount = async (req, res) => {
+const verifyBankAccountController = async (req, res) => {
   const id = req.user.userId;
   const { bankName, bankAccountNumber } = req.body;
 
   try {
     const user = await User.findById(id);
+    if (!user) {
+      throw new customError('User not obtainable for verification', 404);
+    }
 
-    if (!user) throw new customError('User not obtainable for verification', 404);
+    const { bankData } = await fetchBanks();
 
-    const bank = await Bank.findOne({
-      name: bankName,
-    });
-
+    const bank = bankData.find((bank) => bank.name === bankName);
     if (!bank) {
       throw new customError('Bank not found', 400);
     }
@@ -164,8 +173,8 @@ const verifyBankAccount = async (req, res) => {
 };
 
 module.exports = {
-  getSupportedBanks,
-  getBankDetails,
-  updateBankDetails,
-  verifyBankAccount,
+  getSupportedBanksController,
+  getBankDetailsController,
+  updateBankDetailsController,
+  verifyBankAccountController,
 };

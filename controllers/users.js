@@ -2,12 +2,13 @@ const path = require('path');
 const fs = require('fs');
 const formidable = require('formidable');
 const User = require('../models/User.js');
+const DeletedUser = require('../models/DeletedUser.js');
 const customError = require('../utilities/customError.js');
 const handleCustomErrorResponse = require('../utilities/handleCustomErrorResponse.js');
 const { includedProperties, selectedResponseKeys } = require('../utilities/selectedResponseKeys.js');
 const { imageServerUrl, imageServerEnvString } = require('../utilities/serverEnvDefinitions.js');
 
-const getUserInfo = async (req, res) => {
+const getUserInfoController = async (req, res) => {
   const id = req.user.userId;
   const { userId } = req.params;
 
@@ -59,7 +60,7 @@ const getUserInfo = async (req, res) => {
 /**
  * The allowedUpdates array is subject to modification & should be exposed only to Admins
  */
-const updateUserInfo = async (req, res) => {
+const updateUserInfoController = async (req, res) => {
   const id = req.user.userId;
   const { userId } = req.params;
 
@@ -107,7 +108,7 @@ const updateUserInfo = async (req, res) => {
   }
 };
 
-const updateProfileImage = async (req, res) => {
+const updateProfileImageController = async (req, res) => {
   const id = req.user.userId;
   const { userId } = req.params;
 
@@ -181,7 +182,7 @@ const updateProfileImage = async (req, res) => {
 };
 
 // TODO: Handle Errors appropriately here
-const fetchProfileImage = (req, res) => {
+const fetchProfileImageController = (req, res) => {
   const { imageUrl } = req.params;
 
   const imagePath = path.join(__dirname, '..', 'uploads', imageUrl);
@@ -190,9 +191,52 @@ const fetchProfileImage = (req, res) => {
   res.sendFile(imagePath);
 };
 
+const deleteUserAccountController = async (req, res, next) => {
+  const id = req.user.userId;
+  const { userId } = req.params;
+
+  try {
+    if (!userId) {
+      throw new customError('User Id is required as API url parameter', 405);
+    }
+    if (userId !== id) {
+      throw new customError('User unauthorized to perform this action', 401);
+    }
+
+    const userToBeDeleted = await User.findOneAndDelete({
+      _id: userId,
+    });
+    if (!userToBeDeleted) {
+      throw new customError('User not found', 404);
+    }
+
+    const { _id: accId, email, username, firstName, lastName, ...otherCredentials } = userToBeDeleted._doc;
+
+    const deletedUserObj = {
+      accId,
+      email,
+      username,
+      fullName: `${lastName} ${firstName}`,
+    };
+
+    const deletedUser = await DeletedUser.create(deletedUserObj);
+    if (!deletedUser) {
+      throw new customError('Deleted user information not trashed successfully', 404);
+    }
+
+    return res.status(200).json({
+      status: 'success',
+      deletedUser,
+    });
+  } catch (error) {
+    handleCustomErrorResponse(res, error);
+  }
+};
+
 module.exports = {
-  getUserInfo,
-  updateUserInfo,
-  updateProfileImage,
-  fetchProfileImage,
+  getUserInfoController,
+  updateUserInfoController,
+  updateProfileImageController,
+  fetchProfileImageController,
+  deleteUserAccountController,
 };

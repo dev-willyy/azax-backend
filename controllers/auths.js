@@ -137,8 +137,6 @@ const verifyEmailOtpController = async (req, res, next) => {
 const loginUserController = async (req, res, next) => {
   const { email, password } = req.body;
 
-  console.log({ email, password });
-
   try {
     const user = await User.findOne({ email });
 

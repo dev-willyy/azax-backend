@@ -2,7 +2,7 @@ const User = require('../models/User.js');
 const customError = require('../utilities/customError.js');
 const handleCustomErrorResponse = require('../utilities/handleCustomErrorResponse.js');
 
-const updateNotificationStatus = async (req, res, next) => {
+const updateNotificationStatusController = async (req, res, next) => {
   const id = req.user.userId;
   const { userId } = req.params;
   const { notificationStatus } = req.body;
@@ -33,7 +33,7 @@ const updateNotificationStatus = async (req, res, next) => {
   }
 };
 
-const getNotificationStatus = async (req, res, next) => {
+const getNotificationStatusController = async (req, res, next) => {
   const id = req.user.userId;
   const { userId } = req.params;
 
@@ -59,4 +59,4 @@ const getNotificationStatus = async (req, res, next) => {
   }
 };
 
-module.exports = { updateNotificationStatus, getNotificationStatus };
+module.exports = { updateNotificationStatusController, getNotificationStatusController };

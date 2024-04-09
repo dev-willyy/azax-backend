@@ -3,7 +3,7 @@ const { verifyCustomerConfig } = require('../config/thirdPartyConfigs.js');
 const handleCustomErrorResponse = require('../utilities/handleCustomErrorResponse.js');
 const customError = require('../utilities/customError.js');
 
-const fetchAllSupportedCountries = async (req, res) => {
+const fetchAllSupportedCountriesController = async (req, res) => {
   try {
     const response = await axios.get('https://api.paystack.co/country', verifyCustomerConfig);
 
@@ -22,7 +22,7 @@ const fetchAllSupportedCountries = async (req, res) => {
         id: countryInfo.id,
         name: countryInfo.name,
         isoCode: countryInfo.iso_code,
-        curerncyCode: countryInfo.default_currency_code,
+        currencyCode: countryInfo.default_currency_code,
         callingCode: countryInfo.calling_code,
       });
     });
@@ -37,40 +37,90 @@ const fetchAllSupportedCountries = async (req, res) => {
   }
 };
 
-// Controller function to validate/verify customer's details using Paystack API
-const verifyCustomerDetails = async (req, res) => {
+/**
+ * Controller function to validate/verify customer's details using Paystack API
+ * fetch all existing customers from paystack & then check if the customer (by firstName & lastName)
+ * :: to be verified has a matching customer code
+ */
+const verifyCustomerDetailsController = async (req, res) => {
+  const { customerVerificationParams, customerCreationParams, otherParams, user } = req.objs;
+
   try {
-    // Customer details to be sent in the request
-    const params = {
-      country: 'NG',
-      type: 'bank_account',
-      account_number: '0123456789',
-      bvn: '200123456677',
-      bank_code: '007',
-      first_name: 'Asta',
-      last_name: 'Lavista',
-    };
+    const customersResponse = await axios.get('https://api.paystack.co/customer', verifyCustomerConfig);
 
-    // Configuration for the Axios request
+    const { status, statusText, data } = customersResponse;
 
-    const response = await axios.post(
-      'https://api.paystack.co/customer/{customer_code}/identification',
-      params,
+    if (status !== 200) {
+      throw new customError('An error occurred while fetching all customers.', status);
+    }
+
+    const { status: successStatus, message, data: existingCustomers, meta } = data;
+
+    const existingCustomer = existingCustomers.find((customer) => {
+      customer.email === req.body.email;
+    });
+    let customerCode;
+
+    if (!existingCustomer) {
+      const createCustomerResponse = await axios.post(
+        'https://api.paystack.co/customer',
+        customerCreationParams,
+        verifyCustomerConfig
+      );
+
+      const { status, data } = createCustomerResponse;
+
+      if (status !== 200) {
+        throw new customError('An error occurred while creating customers.', status);
+      }
+
+      const { data: customerData } = data;
+
+      customerCode = customerData.customer_code;
+    } else {
+      customerCode = existingCustomer.customer_code;
+    }
+
+    console.log({ existingCustomers });
+
+    if (user.isAccountVerified) {
+      return res.status(200).json({
+        message: 'Customer previously verified',
+        isAccountVerified: user.isAccountVerified,
+      });
+    }
+
+    const validateCustomerResponse = await axios.post(
+      `https://api.paystack.co/customer/${customerCode}/identification`,
+      customerVerificationParams,
       verifyCustomerConfig
     );
 
-    console.log(response);
+    const { response, data: customerValidationData } = validateCustomerResponse;
+    console.log({ response, customerValidationData });
 
-    res.status(200).json(response.data);
+    console.log(validateCustomerResponse.data.status);
+    console.log(validateCustomerResponse.data.status === false);
+
+    if (validateCustomerResponse.data.status !== true) {
+      throw new customError('Customer verification failed', 400);
+    }
+
+    console.log({ user });
+
+    user.isAccountVerified = true;
+    await user.save();
+
+    return res.status(200).json({
+      message: 'Customer successfully verified',
+      isAccountVerified: user.isAccountVerified,
+    });
   } catch (error) {
-    // res.status(500).json({
-    //   error: 'An error occurred while verifying customer details.',
-    // });
     handleCustomErrorResponse(res, error);
   }
 };
 
 module.exports = {
-  fetchAllSupportedCountries,
-  verifyCustomerDetails,
+  fetchAllSupportedCountriesController,
+  verifyCustomerDetailsController,
 };
