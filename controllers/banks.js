@@ -64,10 +64,18 @@ const getBankDetailsController = async (req, res) => {
 
     const { bankName, bankAccountNumber } = user._doc.bankDetails;
 
+    const { bankData } = await fetchBanks();
+
+    const matchingBank = bankData.find((bank) => bank.name === bankName);
+    if (!matchingBank) {
+      throw new customError('Bank code not obtainanble', 400);
+    }
+
     res.status(200).json({
       status: 'success',
       bankName: bankName,
       bankAccountNumber: bankAccountNumber,
+      bankCode: matchingBank?.code,
     });
   } catch (error) {
     handleCustomErrorResponse(res, error);
