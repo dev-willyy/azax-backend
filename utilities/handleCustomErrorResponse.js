@@ -21,7 +21,7 @@ const handleCustomErrorResponse = (res, error) => {
 
     if (response && response.status) {
       res.status(response.status).json({
-        status: data?.status || 'failure',
+        status: 'failure',
         code,
         type: data?.type || 'Axios error response',
         message: data?.message,
