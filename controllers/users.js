@@ -191,6 +191,7 @@ const fetchProfileImageController = (req, res) => {
   res.sendFile(imagePath);
 };
 
+// This controller intends to disable & not to completely delete
 const deleteUserAccountController = async (req, res, next) => {
   const id = req.user.userId;
   const { userId } = req.params;

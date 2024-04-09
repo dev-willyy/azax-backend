@@ -27,6 +27,10 @@ const authenticateUser = async (req, res, next) => {
       return res.status(401).json({
         error: 'Token expired. Login afresh',
       });
+    } else if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({
+        error: 'Malformed JWT token',
+      });
     } else {
       handleCustomErrorResponse(res, error);
     }
