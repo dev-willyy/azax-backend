@@ -5,6 +5,7 @@ const { notificationRoutes } = require('./notificationRoutes.js');
 const { customerVerificationRoutes } = require('./customerVerificationRoutes.js');
 const { settingsRoutes } = require('./settingsRoutes.js');
 const { securityRoutes } = require('./securityRoutes.js');
+const { transactionRoutes } = require('./transactionRoutes.js');
 
 module.exports = {
   authRoutes,
@@ -14,4 +15,5 @@ module.exports = {
   customerVerificationRoutes,
   settingsRoutes,
   securityRoutes,
+  transactionRoutes,
 };

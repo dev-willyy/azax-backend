@@ -212,12 +212,12 @@ const resetPasswordController = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (!user) {
-      throw new ErrorCreator('User not found with this email', 404);
+      throw new customError('User not found with this email', 404);
     }
 
     const isOTPMatch = user.emailOtp === resetPasswordOtp;
 
-    if (!isOTPMatch) throw new ErrorCreator('OTP is incorrect', 400);
+    if (!isOTPMatch) throw new customError('OTP is incorrect', 400);
 
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(newPassword, salt);

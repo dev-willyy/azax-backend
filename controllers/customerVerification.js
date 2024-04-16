@@ -1,11 +1,11 @@
 const axios = require('axios');
-const { verifyCustomerConfig } = require('../config/thirdPartyConfigs.js');
+const { paystackHeadersConfig } = require('../config/thirdPartyConfigs.js');
 const handleCustomErrorResponse = require('../utilities/handleCustomErrorResponse.js');
 const customError = require('../utilities/customError.js');
 
 const fetchAllSupportedCountriesController = async (req, res) => {
   try {
-    const response = await axios.get('https://api.paystack.co/country', verifyCustomerConfig);
+    const response = await axios.get('https://api.paystack.co/country', paystackHeadersConfig);
 
     const { status, statusText, data } = response;
 
@@ -46,7 +46,7 @@ const verifyCustomerDetailsController = async (req, res) => {
   const { customerVerificationParams, customerCreationParams, otherParams, user } = req.objs;
 
   try {
-    const customersResponse = await axios.get('https://api.paystack.co/customer', verifyCustomerConfig);
+    const customersResponse = await axios.get('https://api.paystack.co/customer', paystackHeadersConfig);
 
     const { status, statusText, data } = customersResponse;
 
@@ -65,7 +65,7 @@ const verifyCustomerDetailsController = async (req, res) => {
       const createCustomerResponse = await axios.post(
         'https://api.paystack.co/customer',
         customerCreationParams,
-        verifyCustomerConfig
+        paystackHeadersConfig
       );
 
       const { status, data } = createCustomerResponse;
@@ -93,7 +93,7 @@ const verifyCustomerDetailsController = async (req, res) => {
     const validateCustomerResponse = await axios.post(
       `https://api.paystack.co/customer/${customerCode}/identification`,
       customerVerificationParams,
-      verifyCustomerConfig
+      paystackHeadersConfig
     );
 
     const { response, data: customerValidationData } = validateCustomerResponse;

@@ -12,6 +12,7 @@ const {
   customerVerificationRoutes,
   settingsRoutes,
   securityRoutes,
+  transactionRoutes,
 } = require('./routes');
 const { randomBytes } = require('crypto');
 
@@ -35,6 +36,7 @@ app.use('/api/V1/notification', notificationRoutes);
 app.use('/api/V1/customerVerification', customerVerificationRoutes);
 app.use('/api/V1/settings', settingsRoutes);
 app.use('/api/V1/security', securityRoutes);
+app.use('/api/V1/transaction', transactionRoutes);
 
 app.listen(PORT, () => {
   console.log(`Azax server is running on http://localhost:${PORT}`);

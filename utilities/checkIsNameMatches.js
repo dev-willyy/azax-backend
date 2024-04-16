@@ -7,4 +7,15 @@ const checkIsNameMatches = (fullName, bankAccountName) => {
   return fullNameMatch;
 };
 
-module.exports = checkIsNameMatches;
+function validateBankDetails(bankDetails, requiredWithdrawalFields) {
+  for (const field of requiredWithdrawalFields) {
+    if (!(field in bankDetails)) return { isValidBankDetails: false };
+
+    const value = bankDetails[field];
+    if (value === undefined || value === null) return { isValidBankDetails: false };
+  }
+
+  return { isValidBankDetails: true };
+}
+
+module.exports = { checkIsNameMatches, validateBankDetails };

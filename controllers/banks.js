@@ -3,7 +3,8 @@ const User = require('../models/User.js');
 const Bank = require('../models/Bank.js');
 const handleCustomErrorResponse = require('../utilities/handleCustomErrorResponse.js');
 const customError = require('../utilities/customError.js');
-const checkIsNameMatches = require('../utilities/checkIsNameMatches.js');
+const { checkIsNameMatches } = require('../utilities/checkIsNameMatches.js');
+const { paystackHeadersConfig } = require('../config/thirdPartyConfigs.js');
 
 const fetchBanks = async () => {
   try {
@@ -53,7 +54,6 @@ const getBankDetailsController = async (req, res) => {
     if (!userId) {
       throw new customError('User Id is required', 405);
     }
-
     if (userId !== id) {
       throw new customError('User unauthorized to get resource', 401);
     }
@@ -62,20 +62,23 @@ const getBankDetailsController = async (req, res) => {
 
     if (!user) throw new customError('User not found', 404);
 
-    const { bankName, bankAccountNumber } = user._doc.bankDetails;
+    const { bankName, bankAccountNumber, bankCode } = user._doc.bankDetails;
 
-    const { bankData } = await fetchBanks();
+    let matchingBank;
+    if (!bankCode) {
+      const { bankData } = await fetchBanks();
 
-    const matchingBank = bankData.find((bank) => bank.name === bankName);
-    if (!matchingBank) {
-      throw new customError('Bank code not obtainanble', 400);
+      matchingBank = bankData.find((bank) => bank.name === bankName);
+      if (!matchingBank) {
+        throw new customError('Bank code not obtainanble', 400);
+      }
     }
 
     res.status(200).json({
       status: 'success',
       bankName: bankName,
       bankAccountNumber: bankAccountNumber,
-      bankCode: matchingBank?.code,
+      bankCode: bankCode ? bankCode : matchingBank?.code,
     });
   } catch (error) {
     handleCustomErrorResponse(res, error);
@@ -96,7 +99,6 @@ const updateBankDetailsController = async (req, res) => {
     if (!userId) {
       throw new customError('User Id is required', 405);
     }
-
     if (userId !== id) {
       throw new customError('User unauthorized to get resource', 401);
     }
@@ -109,7 +111,15 @@ const updateBankDetailsController = async (req, res) => {
 
     if (!user) throw new customError('User not found', 404);
 
+    const { bankData } = await fetchBanks();
+
+    const matchingBank = bankData.find((bank) => bank.name === req.body.bankName);
+    if (!matchingBank) {
+      throw new customError("User's Bank code not obtainanble", 400);
+    }
+
     updates.forEach((update) => (user.bankDetails[update] = req.body[update]));
+    user.bankDetails.bankCode = matchingBank?.code;
 
     await user.save();
 
@@ -141,11 +151,7 @@ const verifyBankAccountController = async (req, res) => {
 
     const response = await axios.get(
       `https://api.paystack.co/bank/resolve?account_number=${bankAccountNumber}&bank_code=${bank.code}`,
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
-        },
-      }
+      paystackHeadersConfig
     );
 
     const { data } = response;
@@ -156,6 +162,9 @@ const verifyBankAccountController = async (req, res) => {
       const accountHolderName = data.data.account_name;
 
       if (checkIsNameMatches(userFullName, accountHolderName)) {
+        user.bankDetails.isBankDetailsVerified = true;
+        await user.save();
+
         return res.status(200).json({
           status: 'success',
           message: 'Bank account verified successfully',
@@ -181,6 +190,7 @@ const verifyBankAccountController = async (req, res) => {
 };
 
 module.exports = {
+  fetchBanks,
   getSupportedBanksController,
   getBankDetailsController,
   updateBankDetailsController,

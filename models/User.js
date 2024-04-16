@@ -48,6 +48,14 @@ const userSchema = new Schema(
         type: String,
         trim: true,
       },
+      bankCode: {
+        type: String,
+        trim: true,
+      },
+      isBankDetailsVerified: {
+        type: Boolean,
+        default: false,
+      },
     },
     notificationStatus: {
       type: Boolean,
@@ -76,6 +84,11 @@ const userSchema = new Schema(
         type: String,
         default: 'English',
       },
+    },
+    role: {
+      type: String,
+      enum: ['user', 'customersAdmin', 'companyAdmin', 'manager'],
+      default: 'user',
     },
   },
   {

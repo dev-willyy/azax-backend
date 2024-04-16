@@ -71,16 +71,16 @@ const updateUserInfoController = async (req, res) => {
   const isValidOperation = updateKeysArr.every((update) => allowedUpdates.includes(update));
 
   try {
-    if (!isValidOperation) {
-      throw new customError('Invalid updates!', 403);
-    }
-
     if (!userId) {
       throw new customError('User Id is required', 405);
     }
 
     if (userId !== id) {
       throw new customError('User unauthorized to update resource', 401);
+    }
+
+    if (!isValidOperation) {
+      throw new customError('Invalid updates!', 403);
     }
 
     const filteredUpdateObj = {};

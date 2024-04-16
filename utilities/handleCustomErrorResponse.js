@@ -3,15 +3,15 @@ const { AxiosError } = require('axios');
 const { Error: MongooseError } = require('mongoose');
 
 const handleCustomErrorResponse = (res, error) => {
-  console.error(error);
+  // console.error(error);
 
   if (error instanceof CustomError) {
-    res.status(error.statusCode).json({
+    return res.status(error.statusCode).json({
       status: 'failure',
       message: error.message,
     });
   } else if (error instanceof ReferenceError) {
-    res.status(500).json({
+    return res.status(500).json({
       status: 'failure',
       message: error.message,
     });
@@ -20,7 +20,7 @@ const handleCustomErrorResponse = (res, error) => {
     const { data } = response;
 
     if (response && response.status) {
-      res.status(response.status).json({
+      return res.status(response.status).json({
         status: 'failure',
         code,
         type: data?.type || 'Axios error response',
@@ -28,8 +28,8 @@ const handleCustomErrorResponse = (res, error) => {
         error: response.statusText || 'Unknown Axios error occurred',
       });
     } else {
-      res.status(500).json({
-        status: 'failure',
+      return res.status(500).json({
+        status: response.status || 'failure',
         message: 'Internal Server Error',
       });
     }
@@ -45,7 +45,7 @@ const handleCustomErrorResponse = (res, error) => {
       reason;
     }
 
-    res.status(400).json({
+    return res.status(400).json({
       status: 'failure',
       type: reason?.name,
       message: _message,
@@ -54,7 +54,7 @@ const handleCustomErrorResponse = (res, error) => {
       errorMessage: message,
     });
   } else {
-    res.status(500).json({
+    return res.status(500).json({
       status: 'failure',
       message: 'Internal Server Error',
     });
